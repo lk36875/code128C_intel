@@ -3,7 +3,7 @@
 #include <fstream>
 #include <string>
 #include <regex>
-#include <vector>
+#include <stdexcept>
 using namespace std;
 
 extern "C" int Decode128(unsigned char *image, char *text, int xline, int yline, int skanline);
@@ -12,8 +12,12 @@ unsigned char *ReadBMP(char *filename, int &width, int &height)
 {
   int i;
   std::fstream file;
-  file.open(filename, std::fstream::binary | std::fstream::in);
 
+  file.open(filename, std::fstream::binary | std::fstream::in);
+  if (!file)
+  {
+    throw invalid_argument("File incorrect");
+  }
   file.seekg(0, file.end);
   int length = file.tellg();
   file.seekg(0, file.beg);
@@ -36,31 +40,29 @@ int main(int argc, char **argv)
 {
   if (argc < 3)
   {
-    printf("You must pass 2 arguments.\n");
-    printf("filename, line number\n");
-    return -1;
+    cout << "Required arguments: filename, line number\n";
+    throw invalid_argument("You must pass 2 arguments");
   }
 
   string filename = argv[1];
   if (regex_match(filename, regex(".*\\.bmp")))
   {
     cout << filename << endl;
-    printf("Filename read correctly.\n");
+    cout << "Filename correct.\n";
   }
   else
   {
-    return -1;
+    throw invalid_argument("Format of file is wrong");
   }
 
   int skanline = stoi(argv[2]);
   if (skanline < 0)
   {
-    printf("Skanned line must be greater than 0.\n");
-    return -1;
+    throw invalid_argument("Skanned line must be greater than 0.");
   }
 
   char filename_char[1024];
-  strcpy(filename_char, filename.c_str());
+  std::strcpy(filename_char, filename.c_str());
 
   int width = 0;
   int height = 0;
@@ -70,21 +72,20 @@ int main(int argc, char **argv)
   unsigned char text[] = "nh:wind on the hill";
   int result;
 
-  printf("Input string      > %s\n", ptext);
+  cout << "Input string " << ptext << endl;
   result = Decode128(data, ptext, width, height, skanline);
-  // printf("1After replace    > %s\n", data);
-  cout << data << endl;
-  cout << width << endl;
-  cout << height << endl;
-  printf("Count             > %x\n", result);
+  // cout << data << endl;
+  // cout << width << endl;
+  // cout << height << endl;
+  cout << "Count: " << result << endl;
 
-  ofstream myfile;
-  myfile.open("output.txt");
-  for (int i = 0; i < sizeof(data); i++)
-  {
-    myfile << data[i] << endl;
-  }
-  myfile.close();
+  // ofstream myfile;
+  // myfile.open("output.txt");
+  // for (int i = 0; i < sizeof(data); i++)
+  // {
+  //   myfile << data[i] << endl;
+  // }
+  // myfile.close();
 
   return 0;
 }

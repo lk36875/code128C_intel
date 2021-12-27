@@ -59,9 +59,9 @@
 
 Decode128:
     mov rax, 0			# count=0
-    add rdi, 58
-    mov rax, [rdi]
 
+    inc rdi
+    mov rax, [rdi]
 	ret
 
 

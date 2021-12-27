@@ -9,19 +9,26 @@
     .set s6, 0
 
 
+    .set image, [rdi]
+    .set text, [rsi]
+    .set xline, [rdx]
+    .set yline, [rcx]
+    .set skanline, [r8]
+# int Decode128(unsigned char *image, char *text, int xline, int yline, int skanline);
 
 
 
 
-li $s0, 0	# smallest width counter, will hold smallest width
-	# s1 will hold current pixel address
-	li $s2, 0	# current pattern
-	la $s3, 0	# output counter
-	la $s4, 0	# stack word multiplication counter
-	# s5 will hold boundary of considered pixels
-	la $s6, 0	# s6 hold flag to check if proper start code occured
 
-	li $t0, 25	# y value
+# li $s0, 0	# smallest width counter, will hold smallest width
+# 	# s1 will hold current pixel address
+# 	li $s2, 0	# current pattern
+# 	la $s3, 0	# output counter
+# 	la $s4, 0	# stack word multiplication counter
+# 	# s5 will hold boundary of considered pixels
+# 	la $s6, 0	# s6 hold flag to check if proper start code occured
+#
+# 	li $t0, 25	# y value
 
 
 
@@ -39,19 +46,27 @@ li $s0, 0	# smallest width counter, will hold smallest width
 # char of string
 # Return value: none
 #=====================================================================
-# int Decode128(unsigned char *image, char *text, int xline, int yline, int skanline);
-# define image [ebp+8]
-# define text [ebp+12]
-# define xline [ebp+16]
-# define yline [ebp+20]
-# define skanline [ebp+24]
 
+# 4.3 Register Usage
+# There are sixteen 64-bit registers in x86-64: %rax, %rbx, %rcx, %rdx, %rdi, %rsi, %rbp,
+# %rsp, and %r8-r15.
+
+# Of these, %rax, %rcx, %rdx, %rdi, %rsi, %rsp, and %r8-r11 are
+# considered caller-save registers, meaning that they are not necessarily saved across function
+# calls. By convention, %rax is used to store a function’s return value, if it exists and is no more
+# than 64 bits long. (Larger return types like structs are returned using the stack.) Registers %rbx,
+# %rbp, and %r12-r15 are callee-save registers, meaning that they are saved across function
+# calls. Register %rsp is used as the stack pointer, a pointer to the topmost element in the stack.
+# Additionally, %rdi, %rsi, %rdx, %rcx, %r8, and %r9 are used to pass the first six integer
+# or pointer parameters to called functions. Additional parameters (or large parameters such as
+# structs passed by value) are passed on the stack.
 
 
 
 Decode128:
 
-
+    mov rax, xline
+	ret
 
 
 
@@ -121,7 +136,7 @@ convert_to_stars_and_look:
 
 exit:
 
-    mov rax, code_06
+    movq rax, 2
 
 	ret
 

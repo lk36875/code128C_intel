@@ -7,28 +7,22 @@
     .set s4, 0
     .set s5, 0
     .set s6, 0
-
-
+# int Decode128(unsigned char *image, char *text, int xline, int yline, int skanline);
     .set image, [rdi]
     .set text, [rsi]
     .set xline, [rdx]
     .set yline, [rcx]
     .set skanline, [r8]
-# int Decode128(unsigned char *image, char *text, int xline, int yline, int skanline);
 
 
 
-
-
-# li $s0, 0	# smallest width counter, will hold smallest width
-# 	# s1 will hold current pixel address
-# 	li $s2, 0	# current pattern
-# 	la $s3, 0	# output counter
-# 	la $s4, 0	# stack word multiplication counter
-# 	# s5 will hold boundary of considered pixels
-# 	la $s6, 0	# s6 hold flag to check if proper start code occured
-#
-# 	li $t0, 25	# y value
+# li $s0, 0	# smallest width counter, will hold smallest width      s0
+# 	# s1 will hold current pixel address                            image
+# 	li $s2, 0	# current pattern                                    s2
+# 	la $s3, 0	# output counter                                       text
+# 	la $s4, 0	# stack word multiplication counter                 s4
+# 	# s5 will hold boundary of considered pixels                    s5
+# 	la $s6, 0	# s6 hold flag to check if proper start code occured    s6
 
 
 
@@ -65,8 +59,17 @@
 
 Decode128:
 
-    mov rax, xline
+    inc rdi
+    inc rdi
+    inc rdi
+    inc rdi
+    inc rdi
+    inc rdi
+    mov rbx, [rdi]
+
+    mov rax, rbx
 	ret
+
 
 
 

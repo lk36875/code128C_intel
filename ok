@@ -1,0 +1,4 @@
+make all
+make all
+make all
+./test kod.bmp 24

@@ -1,10 +1,36 @@
 #include <stdio.h>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <regex>
+#include <vector>
 using namespace std;
 
 extern "C" int Decode128(unsigned char *image, char *text, int xline, int yline, int skanline);
+
+unsigned char *ReadBMP(char *filename, int &width, int &height)
+{
+  int i;
+  std::fstream file;
+  file.open(filename, std::fstream::binary | std::fstream::in);
+
+  file.seekg(0, file.end);
+  int length = file.tellg();
+  file.seekg(0, file.beg);
+  char *data = new char[length];
+  file.read(data, length);
+
+  width = *(int *)&data[18];
+  height = *(int *)&data[22];
+  auto headerOffset = *(int *)&data[10];
+
+  unsigned char *pixels = new unsigned char[width * height * 3];
+  file.seekg(headerOffset);
+  file.read((char *)pixels, width * height * 3);
+
+  file.close();
+  return pixels;
+}
 
 int main(int argc, char **argv)
 {
@@ -35,20 +61,10 @@ int main(int argc, char **argv)
 
   char filename_char[1024];
   strcpy(filename_char, filename.c_str());
-  int i;
-  FILE *f = fopen(filename_char, "rb");
-  unsigned char info[54];
-  // header
-  fread(info, sizeof(unsigned char), 54, f);
-  // height and width
-  int width = *(int *)&info[18];
-  int height = *(int *)&info[22];
-  // allocate 3 bytes per pixel
-  int size = 3 * width * height;
-  unsigned char *data = new unsigned char[size];
-  // read the rest of the data
-  fread(data, sizeof(unsigned char), size, f);
-  fclose(f);
+
+  int width = 0;
+  int height = 0;
+  auto data = ReadBMP(filename_char, width, height);
 
   char ptext[] = "No code";
   unsigned char text[] = "nh:wind on the hill";
@@ -56,8 +72,19 @@ int main(int argc, char **argv)
 
   printf("Input string      > %s\n", ptext);
   result = Decode128(data, ptext, width, height, skanline);
-  printf("1After replace    > %s\n", data);
-  printf("Count             > %d\n", result);
+  // printf("1After replace    > %s\n", data);
+  cout << data << endl;
+  cout << width << endl;
+  cout << height << endl;
+  printf("Count             > %x\n", result);
+
+  ofstream myfile;
+  myfile.open("output.txt");
+  for (int i = 0; i < sizeof(data); i++)
+  {
+    myfile << data[i] << endl;
+  }
+  myfile.close();
 
   return 0;
 }

@@ -78,7 +78,8 @@ int main(int argc, char **argv)
   // cout << width << endl;
   // cout << height << endl;
   // cout << "Count: " << result << endl;
-  printf("Count             > %x\n", result);
+  printf("Count      num     > %d\n", result);
+  printf("Count      hex     > %x\n", result);
 
   // ofstream myfile;
   // myfile.open("output.txt");

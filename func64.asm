@@ -1,36 +1,14 @@
-    .include "constants.inc"
-    .set data, 2
-    .set s0, 0
-    .set s1, 0
-    .set s2, 0
-    .set s3, 0
-    .set s4, 0
-    .set s5, 0
-    .set s6, 0
-# int Decode128(unsigned char *image, char *text, int xline, int yline, int skanline);
-    .set image, [rdi]
-    .set text, [rsi]
-    .set xline, [rdx]
-    .set yline, [rcx]
-    .set skanline, [r8]
-
-
-
-# li $s0, 0	# smallest width counter, will hold smallest width      s0
-# 	# s1 will hold current pixel address                            image
-# 	li $s2, 0	# current pattern                                    s2
-# 	la $s3, 0	# output counter                                       text
-# 	la $s4, 0	# stack word multiplication counter                 s4
-# 	# s5 will hold boundary of considered pixels                    s5
-# 	la $s6, 0	# s6 hold flag to check if proper start code occured    s6
 
 
 
 
 
 
-	.global  Decode128
-	.text
+
+
+
+
+
 
 
 #=====================================================================
@@ -56,14 +34,132 @@
 # structs passed by value) are passed on the stack.
 
 
+    .include "constants.inc"
+    .set data, 2
+    .set s0, 0
+    .set s1, 0
+    .set s2, 0
+    .set s3, 0
+    .set s4, 0
+    .set s5, 0
+    .set s6, 0
+# int Decode128(unsigned char *image, char *text, int xline, int yline, int skanline);
+    # .set image, [rdi]
+    # .set text, [rsi]
+    .set xline, [rdx]
+    .set yline, [rcx]
+    .set skanline, [r8]
+
+
+
+
+
+    .global  Decode128
+	.text
 
 Decode128:
-    mov rax, 0			# count=0
 
-    inc rdi
-    mov rax, [rdi]
+    mov rax, 0
+    mov r8, 0
+    mov r9, 0
+    mov r10, 0
+    mov r11, 0
+    mov r12, 0
+    mov r13, 0
+    mov r14, 0
+    mov r15, 0
+
+    # li $s0, 0	# smallest width counter, will hold smallest width      s0
+    # 	# s1 will hold current pixel address                            rdi, s1 is iterator
+    # 	li $s2, 0	# current pattern                                    s2
+    # 	la $s3, 0	# output counter                                       rsi
+    # 	la $s4, 0	# stack word multiplication counter                 s4
+    # 	# s5 will hold boundary of considered pixels                    s5
+    # 	la $s6, 0	# s6 hold flag to check if proper start code occured    s6
+
+    # FILE READ
+
+get_middle:
+# arguments:
+#	x = 0
+#	$a1 - y coordinate - (0,0) - bottom left corner
+
+    mov rbx, rdi # rbx - copy of rdi
+    add r8, xline
+    imul r8, 3  # r8 holds row length in bytes
+    add rbx, r8
+    .set s5, rbx # s5 holds beggining of next row
+
+
+# t0 - r10, s1 - rbx, s0 - bedzie z r11, t3 = r12
+
+smallest_width:
+    mov rbx, rdi # [rbx] -first pixel
+    mov r10, [rbx]
+# ????????????????????????????????
+    cmp rbx, s5
+    jge error2
+
+    cmp r10, 0x00000000 # if black, count width
+    je black
+    cmp r11, 0
+    jne white
+    jmp next
+
+black:
+    add r11, 1
+	jmp next
+
+
+white:
+    cmp r10, 0x000000ff
+    je sw_exit
+	jmp next
+
+next:
+    add rbx, 3
+    cmp r10, 0x000000ff
+	jne smallest_width
+    add r12, 3
+	jmp smallest_width
+
+sw_exit:
+    sar r11, 1 # smallest width at $r11
+	imul r11, 3 	# 1 width jump at $r11
+    .set s0, r11
+
+check_space_error:
+    imul r11, 10
+    cmp r11, r12
+    jl error3
+
+
+
+
+
+
+ #   mov rax, [rbx + r8]
+    mov rax, 12312312
 	ret
 
+
+condition0:
+    mov rax, 0
+	ret
+
+
+condition1:
+    mov rax, 1
+	ret
+
+
+error2:
+    mov rax, 2222
+	ret   # out of range error
+
+error3:
+    mov rax, 3333
+	ret   # space error
 
 
 

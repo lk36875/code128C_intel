@@ -77,7 +77,8 @@ int main(int argc, char **argv)
   // cout << data << endl;
   // cout << width << endl;
   // cout << height << endl;
-  cout << "Count: " << result << endl;
+  // cout << "Count: " << result << endl;
+  printf("Count             > %x\n", result);
 
   // ofstream myfile;
   // myfile.open("output.txt");

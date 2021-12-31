@@ -107,6 +107,7 @@ get_middle:
 
     mov [s5], rbx # s5 holds beggining of next row
     mov rbx, rdi # [rbx] -first pixel
+
 # t0 - r10, s1 - rbx, s0 - bedzie z r11, t3 = r12
 
 smallest_width:
@@ -115,7 +116,7 @@ smallest_width:
     cmp rbx, r8
     jge error2
 
-    cmp r10, 0x00000000 # if black, count width
+    cmp r10, 0 # if black, count width
     je black
     cmp r11, 0
     jne white
@@ -127,13 +128,13 @@ black:
 
 
 white:
-    cmp r10, 0x000000ff
+    cmp r10, -1
     je sw_exit
 	jmp next
 
 next:
     add rbx, 3
-    cmp r10, 0x000000ff
+    cmp r10, -1
 	jne smallest_width
     add r12, 3
 	jmp smallest_width
@@ -145,7 +146,7 @@ sw_exit:
 
 check_space_error:
     imul r11, 10
-    cmp r11, r12
+    cmp r12, r11
     jl error3
 
 

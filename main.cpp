@@ -72,8 +72,9 @@ int main(int argc, char **argv)
   unsigned char text[] = "nh:wind on the hill";
   int result;
 
-  cout << "Input string " << ptext << endl;
+  cout << "Input string: " << ptext << endl;
   result = Decode128(data, ptext, width, height, skanline);
+  cout << "Output string: " << ptext << endl;
   // cout << data << endl;
   // cout << width << endl;
   // cout << height << endl;

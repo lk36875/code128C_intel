@@ -103,7 +103,7 @@ get_line:
     mov rbx, rdi # rbx - copy of rdi
     mov r8, r14 # move length of line to r9
     imul r8, 3  # r8 holds row length in bytes
-    sub rbx, r8
+    add rbx, r8
 
     mov [s5], rbx # s5 holds beggining of next row
     mov rbx, rdi # [rbx] -first pixel

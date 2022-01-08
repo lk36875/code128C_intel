@@ -68,13 +68,13 @@ int main(int argc, char **argv)
   int height = 0;
   auto data = ReadBMP(filename_char, width, height);
 
-  char ptext[] = "No code";
+  char ptext[] = "                    ";
   unsigned char text[] = "nh:wind on the hill";
   int result;
 
-  cout << "Input string: " << ptext << endl;
+  // cout << "Input string: " << ptext << endl;
   result = Decode128(data, ptext, width, height, skanline);
-  cout << "Output string: " << ptext << endl;
+  cout << "Code: " << ptext << endl;
   // cout << data << endl;
   // cout << width << endl;
   // cout << height << endl;

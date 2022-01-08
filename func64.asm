@@ -158,6 +158,8 @@ check_space_error:
     jmp add_black
 
 pattern_set_up:		# set up for standard code
+    mov r10, 0
+
     mov r11, 1
     mov r12, 1
     mov r15, 6
@@ -270,15 +272,82 @@ add_white:		# add white to s2 register in form of binary 0
 
 
 decode_prepare:
-    mov r10, 0
+    mov r10, 0 # counter
+    # table
+    mov r12, 0
+
+decode:
+    mov r12w, [table + 2 * r10]
+    cmp r12w, [s2]
+    je match
+
+    next_code:
+        add r10, 1
+        cmp r10, 106
+        je possible_stop
+        jmp decode
+
+check_set_up:
+    cmp r10, 105
+    jne wrong_pattern
+    mov r8, 1
+    mov [s6], r8
+    jmp match_continue
+
+
+match:
+    mov r8, 0
+    cmp [s6], r8
+    je check_set_up
+
+match_continue:
+    cmp r10, 105
+    je pattern_set_up
+
+    cmp r10, 100
+    je wrong_pattern
+    cmp r10, 101
+    je wrong_pattern
+    cmp r10, 102
+    je wrong_pattern
+    cmp r10, 103
+    je wrong_pattern
+    cmp r10, 104
+    je wrong_pattern
+
+	push r10
+
+    cmp r10, 10
+    jl less_than_10
+
+    mov rdx, 0
+    mov rax, r10
+    mov r8, 10
+	div r8
+
+    add rax, '0'
+    add rdx, '0'
+    mov BYTE PTR[rsi], al
+    inc rsi
+    mov BYTE PTR[rsi], dl
+    inc rsi
+    jmp pattern_set_up
+
+    less_than_10:
+        mov BYTE PTR[rsi], '0'
+        inc rsi
+        add r10, '0'
+        mov BYTE PTR[rsi], r10b
+        inc rsi
+		jmp pattern_set_up
 
 
 
+jmp condition1
 
-
-
-
-
+wrong_pattern:
+jmp condition0
+possible_stop:
 
 # ????????????????????????????????
 # ????????????????????????????????

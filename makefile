@@ -1,4 +1,4 @@
-CC=g++
+CC=g++ -no-pie
 ASMBIN=as
 
 all : asm cc link

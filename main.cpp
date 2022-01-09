@@ -55,12 +55,6 @@ int main(int argc, char **argv)
     throw invalid_argument("Format of file is wrong");
   }
 
-  int skanline = stoi(argv[2]);
-  if (skanline < 0)
-  {
-    throw invalid_argument("Skanned line must be greater than 0.");
-  }
-
   char filename_char[1024];
   std::strcpy(filename_char, filename.c_str());
 
@@ -68,8 +62,13 @@ int main(int argc, char **argv)
   int height = 0;
   auto data = ReadBMP(filename_char, width, height);
 
-  char ptext[] = "                                       ";
+  int skanline = stoi(argv[2]);
+  if (skanline <= 1 || skanline >= (height - 1))
+  {
+    throw invalid_argument("Skanned line must be greater than 1 and lower than height - 1.");
+  }
 
+  char ptext[] = "                                       ";
   int result;
   result = Decode128(data, ptext, width, height, skanline);
   if (result == 0)

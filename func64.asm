@@ -1,57 +1,12 @@
+    .include "constants.inc"
+    .set smallest_jump, [rsp - 8]
+    .set current_pattern, [rsp - 16]
+    .set checksum_counter, [rsp - 24]
+    .set boundary, [rsp - 32]
+    .set checksum, [rsp - 40]
 
 
-
-
-
-
-
-
-
-
-
-
-
-#=====================================================================
-# int Decode128(char *a)#
-#
-# Description: Function changes chars to '*' between first and second
-# char of string
-# Return value: none
-#=====================================================================
-
-# 4.3 Register Usage
-# There are sixteen 64-bit registers in x86-64: %rax, %rbx, %rcx, %rdx, %rdi, %rsi, %rbp,
-# %rsp, and %r8-r15.
-
-# Of these, %rax, %rcx, %rdx, %rdi, %rsi, %rsp, and %r8-r11 are
-# considered caller-save registers, meaning that they are not necessarily saved across function
-# calls. By convention, %rax is used to store a function’s return value, if it exists and is no more
-# than 64 bits long. (Larger return types like structs are returned using the stack.) Registers %rbx,
-# %rbp, and %r12-r15 are callee-save registers, meaning that they are saved across function
-# calls. Register %rsp is used as the stack pointer, a pointer to the topmost element in the stack.
-# Additionally, %rdi, %rsi, %rdx, %rcx, %r8, and %r9 are used to pass the first six integer
-# or pointer parameters to called functions. Additional parameters (or large parameters such as
-# structs passed by value) are passed on the stack.
-
-
-    .include "cv2.inc"
-    .set s0, [rsp - 4]
-    .set s1, [rsp - 8]
-    .set s2, [rsp - 12]
-    .set s3, [rsp - 16]
-    .set s4, [rsp - 20]
-    .set s5, [rsp - 24]
-    .set s6, [rsp - 28]
 # int Decode128(unsigned char *image, char *text, int xline, int yline, int skanline);
-    # .set image, [rdi]
-    # .set text, [rsi]
-#   .set xline, [rsp - 32]
-#   .set yline, [rsp - 36]
-#   .set skanline, [rsp - 40]
-
-
-
-
 
     .global  Decode128
 	.text
@@ -63,16 +18,15 @@ Decode128:
 
     push    rbp
     mov     rbp, rsp
-    sub     rsp, 52
+    sub     rsp, 40
 
     mov r8, 0
-    mov [s0],  r8
-    mov [s1],  r8
-    mov [s2],  r8
-    mov [s3],  r8
-    mov [s4],  r8
-    mov [s5],  r8
-    mov [s6],  r8
+    mov [smallest_jump],  r8
+    mov [current_pattern],  r8
+    mov [checksum_counter],  r8
+    mov [boundary],  r8
+    mov [checksum],  r8
+
 
     mov rax, 0
     mov r9, 0
@@ -80,12 +34,12 @@ Decode128:
     mov r11, 0
     mov r12, 0
 
-    # li $s0, 0	# smallest width counter, will hold smallest width      s0
+    # li $smallest_jump, 0	# smallest width counter, will hold smallest width      smallest_jump
     # 	# s1 will hold current pixel address                            rdi, s1 is iterator
-    # 	li $s2, 0	# current pattern                                    s2
-    # 	la $s3, 0	# output counter                                       rsi
-    # 	la $s4, 0	# stack word multiplication counter                 s4
-    # 	# s5 will hold boundary of considered pixels                    s5
+    # 	li $current_pattern, 0	# current pattern                                    current_pattern
+    # 	la $checksum_counter, 0	# output counter                                       rsi
+    # 	la $boundary, 0	# stack word multiplication counter                 boundary
+    # 	# checksum will hold boundary of considered pixels                    checksum
     # 	la $s6, 0	# s6 hold flag to check if proper start code occured    s6
 
     # FILE READ
@@ -105,15 +59,15 @@ get_line:
     imul r8, 3  # r8 holds row length in bytes
     add rbx, r8
 
-    mov [s4], rbx # s5 holds beggining of next row
+    mov [boundary], rbx # boundary holds beggining of next row
     mov rbx, rdi # [rbx] -first pixel
 
-# t0 - r10, s1 - rbx, s0 - bedzie z r11, t3 = r12
+# t0 - r10, s1 - rbx, smallest_jump - bedzie z r11, t3 = r12
 smallest_width:
     mov r10b, [rbx]
-    mov r8, [s4]
+    mov r8, [boundary]
     cmp rbx, r8
-    jge error2
+    jge out_of_range_error
 
     cmp r10b, 0 # if black, count width
     je black
@@ -141,16 +95,16 @@ next:
 sw_exit:
     sar r11, 1 # smallest width at $r11
 	imul r11, 3 	# 1 width jump at $r11
-    mov [s0], r11
+    mov [smallest_jump], r11
 
 check_space_error:
     imul r11, 10
     cmp r12, r11
-    jl error3
+    jl wrong_space
 
     mov r10, 0
     mov r8, 1
-    mov [s2], r8
+    mov [current_pattern], r8
     mov r11, 1
     mov r12, 1
     mov r14, 2
@@ -165,19 +119,19 @@ pattern_set_up:		# set up for standard code
     mov r15, 6
 
     mov r8, 1
-    mov [s2], r8
+    mov [current_pattern], r8
 
 look_for_pattern:
 	count_black:
         cmp r15, 0
         je decode_prepare
-        mov r8, [s0]
+        mov r8, [smallest_jump]
         add rbx, r8
 
-        mov r8, [s4]
+        mov r8, [boundary]
         cmp rbx, r8
         mov r8, 0
-        jge error2
+        jge out_of_range_error
 
         mov r10b, [rbx]
         cmp r10b, 0
@@ -197,13 +151,13 @@ look_for_pattern:
 
 
 	count_white:		# increment white color counter
-        mov r8, [s0]
+        mov r8, [smallest_jump]
         add rbx, r8
         mov r10b, [rbx]
-        mov r8, [s4]
+        mov r8, [boundary]
         cmp rbx, r8
         mov r8, 0
-        jge error2
+        jge out_of_range_error
 
         cmp r10b, 255
         je add_one_white
@@ -224,7 +178,7 @@ look_for_pattern:
 
 
 
-add_black:		# add black to s2 register in form of binary 1
+add_black:		# add black to current_pattern register in form of binary 1
 	cmp r15, 5 # jump if this is start of pattern
     je pattern_beggining
     jmp pattern_black
@@ -237,10 +191,10 @@ add_black:		# add black to s2 register in form of binary 1
         cmp r14, 0
         je prepare_for_white_count
 
-        mov r8, [s2]
+        mov r8, [current_pattern]
         sal r8, 1
         add r8, 1
-        mov [s2], r8
+        mov [current_pattern], r8
         mov r8, 0
 
 
@@ -253,14 +207,14 @@ add_black:		# add black to s2 register in form of binary 1
 
 
 
-add_white:		# add white to s2 register in form of binary 0
+add_white:		# add white to current_pattern register in form of binary 0
 	pattern_white:
         cmp r14, 0
         je prepare_for_black_count
 
-		mov r8, [s2]
+		mov r8, [current_pattern]
         sal r8, 1
-        mov [s2], r8
+        mov [current_pattern], r8
         mov r8, 0
 
 		sub r14, 1
@@ -278,7 +232,7 @@ decode_prepare:
 
 decode:
     mov r12w, [table + 2 * r10]
-    cmp r12w, [s2]
+    cmp r12w, [current_pattern]
     je match
 
     next_code:
@@ -289,14 +243,14 @@ decode:
 
 check_set_up:
     mov r8, 105
-    add [s5], r8
+    add [checksum], r8
     cmp r10, 105
     jne wrong_pattern
     jmp match_continue
 
 
 match:
-    mov r8b, [s3]
+    mov r8b, [checksum_counter]
     cmp r8b, 0
     je check_set_up
 
@@ -314,13 +268,13 @@ match_continue:
     je wrong_pattern
 
 
-    mov r8, [s3] # count word
+    mov r8, [checksum_counter] # count word
     mov r9, r10 # move current word to r9
     imul r9, r8 # multiply word by counter
-    add [s5], r9 # add word to checksum
+    add [checksum], r9 # add word to checksum
 
 	mov r8, 1
-    add [s3], r8b
+    add [checksum_counter], r8b
 
     cmp r10, 105
     je pattern_set_up
@@ -366,20 +320,20 @@ ret
 # ????????????????????????????????
 # ????????????????????????????????
 possible_stop:
-    mov r8, [s2]
+    mov r8, [current_pattern]
     cmp r8, 0x63A
     jne stop_error
 
     mov r11, 1
 
 	count_stop:
-        mov r8, [s0]
+        mov r8, [smallest_jump]
         add rbx, r8
         mov r10b, [rbx]
-        mov r8, [s4]
+        mov r8, [boundary]
         cmp rbx, r8
         mov r8, 0
-        jge error2
+        jge out_of_range_error
 
         cmp r10b, 0
         je increment_count_stop
@@ -401,13 +355,13 @@ check_space:
     mov r12, 9
 
 	loop_check_space:
-        mov r8, [s0]
+        mov r8, [smallest_jump]
         add rbx, r8
         mov r10b, [rbx]
-        mov r8, [s4]
+        mov r8, [boundary]
         cmp rbx, r8
         mov r8, 0
-        jge error2
+        jge out_of_range_error
 
         cmp r10b, 0
         je wrong_space
@@ -421,8 +375,8 @@ count_checksum:
     mov r11, 0
 
 
-    mov r8, [s3] # count word
-    mov r13, [s5] # checksum + checksum read in r13
+    mov r8, [checksum_counter] # count word
+    mov r13, [checksum] # checksum + checksum read in r13
 
 
     mov r10b, BYTE PTR[rsi-2]
@@ -459,6 +413,52 @@ write:
 
 
 
+
+
+
+
+
+out_of_range_error:
+    mov    rsp, rbp
+    pop    rbp
+    mov rax, 1
+	ret   # out of range error
+
+wrong_space:
+    mov    rsp, rbp
+    pop    rbp
+    mov rax, 2
+	ret   # wrong space error
+
+wrong_checksum:
+    mov    rsp, rbp
+    pop    rbp
+    mov rax, 3
+	ret   # wrong checksum error
+
+stop_error:
+    mov    rsp, rbp
+    pop    rbp
+    mov rax, 4
+	ret   # stop error error
+
+
+condition0:
+    mov    rsp, rbp
+    pop    rbp
+    mov rax, 9000
+	ret
+
+
+condition1:
+    mov    rsp, rbp
+    pop    rbp
+    mov rax, 1000
+	ret
+
+
+
+
 # ????????????????????????????????
 # ????????????????????????????????
 mov BYTE PTR[rsi], 'e'
@@ -475,240 +475,3 @@ ret
 # ????????????????????????????????
 # ????????????????????????????????
 
-
-
-wrong_checksum:
-stop_error:
-wrong_space:
-# ????????????????????????????????
-# ????????????????????????????????
-mov BYTE PTR[rsi-2], ' '
-mov BYTE PTR[rsi-1], ' '
-
-mov r8b, BYTE PTR[rsi-4]
-mov rsp, rbp
-pop rbp
-
-mov al, r8b
-ret
-
-# ????????????????????????????????
-# ????????????????????????????????
-
-# ????????????????????????????????
-# ????????????????????????????????
-mov BYTE PTR[rsi], '8'
-mov r8, 0
-mov r8, [s5]
-sub rbx, r8
-mov rsp, rbp
-pop rbp
-
-mov rax, rbx
-ret
-
-# ????????????????????????????????
-# ????????????????????????????????
-
-# ????????????????????????????????
-# ????????????????????????????????
-mov BYTE PTR[rsi], '2'
-mov r8, 0
-mov r8w, [table+2]
-mov rsp, rbp
-pop rbp
-
-mov rax, r8
-ret
-
-# ????????????????????????????????
-# ????????????????????????????????
-
-
-
-
-
-
-
-
-
-# ????????????????????????????????
-# ????????????????????????????????
-mov BYTE PTR[rsi], '9'
-
-mov rsp, rbp
-pop rbp
-
-mov rax, r8
-ret
-
-# ????????????????????????????????
-# ????????????????????????????????
-
- #   mov al, [rbx + r8]
-    mov    rsp, rbp
-    pop    rbp
-    mov rax, 12312312
-	ret
-
-
-condition0:
-    mov    rsp, rbp
-    pop    rbp
-    mov rax, 0
-	ret
-
-
-condition1:
-    mov    rsp, rbp
-    pop    rbp
-    mov rax, 1
-	ret
-
-
-error2:
-    mov    rsp, rbp
-    pop    rbp
-    mov BYTE PTR[rsi], '2'
-    mov BYTE PTR[rsi+1], '2'
-    mov BYTE PTR[rsi+2], '2'
-    mov BYTE PTR[rsi+3], '2'
-
- #    mov r8, [s5]
- #    sub rbx, rdi
- #    mov rax, rbx
-    mov rax, [s2]
-	ret   # out of range error
-
-error3:
-    mov    rsp, rbp
-    pop    rbp
-    mov rax, 3333
-	ret   # space error
-
-
-
-
-
-
-
-
-
-
-
-
-	#address of *a in rdi
-	#return value in rax
-
-
-
-	mov rax, 0			# count=0
-    mov rsi, rdi
-
-read_first_second:
-
-    mov al, [rdi] # first char
-    cmp al, 0 # end of string
-	jz exit
-    mov BYTE PTR[rdi], ' ' # change first char to space
-    inc rdi # increment string and temp string
-    inc rsi
-    mov bl, [rdi] # second char
-    cmp al, 0 # end of string
-	jz exit
-    mov BYTE PTR[rdi], ' '
-    inc rdi
-    inc rsi
-    mov cl, [rdi]
-    cmp cl, 0
-    mov BYTE PTR[rdi], ' '
-
-first_loop:
-    mov cl, [rdi]
-    cmp cl, 0
-	jz exit # no char found
-    cmp cl, al
-    je check_if_second_exists # if first char found check if second char exists
-    inc rdi # increment rdi if char not found
-    inc rsi
-    jmp first_loop # and look
-
-check_if_second_exists:
-    # incrementing temp string rsi to find second char
-    mov cl, [rsi]
-    cmp cl, bl
-	je convert_to_stars_and_look # char found, convert
-    cmp cl, 0
-    je exit # char not found, abort
-    inc rsi
-    jmp check_if_second_exists
-
-
-
-convert_to_stars_and_look:
-    # iterate and convert
-    inc rdi
-    mov cl, [rdi]
-    cmp cl, bl
-    je exit # if second char found, stop converting and end fucntion
-    mov BYTE PTR[rdi], '*'     # else if not second char , put star, *a = '*'
-    jmp convert_to_stars_and_look
-    ; inc rax
-
-
-exit:
-
-    movq rax, 2
-
-	ret
-
-# ????????????????????????????????
-# ????????????????????????????????
-mov BYTE PTR[rsi], '8'
-mov r8b, [rbx+6]
-mov rsp, rbp
-pop rbp
-
-mov rax, r8
-ret
-
-# ????????????????????????????????
-# ????????????????????????????????
-
-    # ????????????????????????????????
-# ????????????????????????????????
-mov BYTE PTR[rsi], '8'
-mov r8, [s5]
-sub r8, rbx
-mov rsp, rbp
-pop rbp
-
-mov rax, r8
-ret
-
-# ????????????????????????????????
-# ????????????????????????????????
-
-
-
-    xor rdx, rdx
-    xor rax, rax
-    mov al, r13b
-    mov r8b, 103
-	div r8
-
-
-# ????????????????????????????????
-# ????????????????????????????????
-mov BYTE PTR[rsi], 'e'
-
-xor r15, r15
-mov r15b, dl
-mov rsp, rbp
-pop rbp
-
-mov rax, r15
-ret
-
-# ????????????????????????????????
-# ????????????????????????????????

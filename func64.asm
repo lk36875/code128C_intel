@@ -413,7 +413,7 @@ stop_error:
     mov    rsp, rbp
     pop    rbp
     mov rax, 4
-	ret   # stop error error
+	ret   # stop error
 
 wrong_pattern:
     mov    rsp, rbp

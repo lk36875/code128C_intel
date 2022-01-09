@@ -68,27 +68,36 @@ int main(int argc, char **argv)
   int height = 0;
   auto data = ReadBMP(filename_char, width, height);
 
-  char ptext[] = "                    ";
-  unsigned char text[] = "nh:wind on the hill";
+  char ptext[] = "                                       ";
+
   int result;
-
-  // cout << "Input string: " << ptext << endl;
   result = Decode128(data, ptext, width, height, skanline);
-  cout << "Code: " << ptext << endl;
-  // cout << data << endl;
-  // cout << width << endl;
-  // cout << height << endl;
-  // cout << "Count: " << result << endl;
-  printf("Count      num     > %d\n", result);
-  printf("Count      hex     > %x\n", result);
-
-  // ofstream myfile;
-  // myfile.open("output.txt");
-  // for (int i = 0; i < sizeof(data); i++)
-  // {
-  //   myfile << data[i] << endl;
-  // }
-  // myfile.close();
+  if (result == 0)
+  {
+    printf("Returned value : %d\n", result);
+    printf("Code: %s\n", ptext);
+    printf("Code read correctly.\n\n");
+  }
+  else if (result == 1)
+  {
+    throw runtime_error("Out of range error");
+  }
+  else if (result == 2)
+  {
+    throw runtime_error("Wrong space error");
+  }
+  else if (result == 3)
+  {
+    throw runtime_error("Wrong checksum error");
+  }
+  else if (result == 4)
+  {
+    throw runtime_error("Wrong stop error");
+  }
+  else if (result == 5)
+  {
+    throw runtime_error("Wrong pattern error");
+  }
 
   return 0;
 }

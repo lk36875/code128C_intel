@@ -125,6 +125,8 @@ count_black:
     mov r8, [smallest_jump]
     add rbx, r8
 
+    cmp r11, 100
+    jg out_of_range_error
     mov r8, [boundary]
     cmp rbx, r8
     mov r8, 0
@@ -151,6 +153,9 @@ count_white:		# increment white color counter
     mov r8, [smallest_jump]
     add rbx, r8
     mov r10b, [rbx]
+
+    cmp r12, 100
+    jg out_of_range_error
     mov r8, [boundary]
     cmp rbx, r8
     mov r8, 0

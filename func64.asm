@@ -41,7 +41,7 @@ Decode128:
     mov r12, 0
 
 
-# FILE READ
+# FIND LINE AND BOUNDARY
 
 get_line:
 

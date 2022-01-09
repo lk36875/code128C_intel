@@ -232,11 +232,11 @@ decode:
     cmp r12w, [current_pattern]
     je match
 
-    next_code:
-        add r10, 1
-        cmp r10, 106
-        je possible_stop    # possible stop since there were no matches, else error
-        jmp decode
+next_code:
+    add r10, 1
+    cmp r10, 106
+    je possible_stop    # possible stop since there were no matches, else error
+    jmp decode
 
 check_set_up:
     mov r8, 105
